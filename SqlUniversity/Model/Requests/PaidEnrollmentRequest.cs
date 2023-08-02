@@ -5,7 +5,7 @@
 
     }
 
-    public class PaidEnrollmentResponse : EnrollmentReponse
+    public class PaidEnrollmentResponse : EnrollmentNetBetReponseBase<PaidEnrollmentRequest>
     {
 
     }

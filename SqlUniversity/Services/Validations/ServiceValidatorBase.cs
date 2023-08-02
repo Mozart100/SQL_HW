@@ -1,4 +1,5 @@
-﻿using ValidationResult = FluentValidation.Results.ValidationResult;
+﻿using SqlUniversity.Infrastracture;
+using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace SqlUniversity.Services.Validations
 {
@@ -27,6 +28,15 @@ namespace SqlUniversity.Services.Validations
             }
 
             return errors;
+        }
+
+        protected void Validate(IEnumerable<UniversityError> errors)
+        {
+            if (errors.SafeAny())
+            {
+                var instance = new UninversityException(errors.ToArray());
+                throw instance;
+            }
         }
     }
 }

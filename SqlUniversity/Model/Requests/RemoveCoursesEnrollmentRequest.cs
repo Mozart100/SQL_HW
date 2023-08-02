@@ -2,12 +2,11 @@
 {
     public class RemoveCoursesEnrollmentRequest : AddCoursesEnrollmentRequest
     {
-
+         
     }
 
-    public class RemoveCoursesEnrollmentResponse : EnrollmentReponse
+    public class RemoveCoursesEnrollmentResponse : EnrollmentNetBetReponseBase<RemoveCoursesEnrollmentRequest>
     {
-
     }
 
 }

@@ -12,15 +12,15 @@ namespace SqlUniversity.Services
 {
     public interface IEnrollmentService
     {
-        CreateEnrollmentResponse CreateRegistration(CreateEnrollmentRequest enrollment);
-        AddCoursesEnrollmentResponse AddCourseToEnrollment(int enrollmentId, AddCoursesEnrollmentRequest request);
+        Task<CreateEnrollmentResponse> CreateRegistrationAsync(CreateEnrollmentRequest enrollment);
+        Task<AddCoursesEnrollmentResponse> AddCourseToEnrollmentAsync(int enrollmentId, AddCoursesEnrollmentRequest request);
 
-        FinishRegistrationEnrollmentResponse FinishRegistration(int enrollmentId, FinishRegistrationEnrollmentRequest request);
+        Task<FinishRegistrationEnrollmentResponse> FinishRegistrationAsync(int enrollmentId, FinishRegistrationEnrollmentRequest request);
         IEnumerable<EnrollmentDto> GetAllEnrollments();
-        PaidEnrollmentResponse PayedRegistration(int enrollmentId, PaidEnrollmentRequest request);
-        RemoveAllCoursesEnrollmentResponse RemoveAllCourses(int enrollmentId, RemoveAllCoursesEnrollmentRequest request);
-        RemoveCoursesEnrollmentResponse RemoveCourses(int enrollmentId, RemoveCoursesEnrollmentRequest request);
-        CancelledEnrollmentResponse CancelledRegistration(int enrollmentId);
+        Task<PaidEnrollmentResponse> PayedRegistrationAsync(int enrollmentId, PaidEnrollmentRequest request);
+        Task<RemoveAllCoursesEnrollmentResponse> RemoveAllCoursesAsync(int enrollmentId, RemoveAllCoursesEnrollmentRequest request);
+        Task<RemoveCoursesEnrollmentResponse> RemoveCoursesAsync(int enrollmentId, RemoveCoursesEnrollmentRequest request);
+        Task<CancelledEnrollmentResponse> CancelledRegistrationAsync(int enrollmentId);
     }
 
     public class EnrollmentService : IEnrollmentService
@@ -52,20 +52,9 @@ namespace SqlUniversity.Services
 
         }
 
-        public CreateEnrollmentResponse CreateRegistration(CreateEnrollmentRequest request)
+        public async Task<CreateEnrollmentResponse> CreateRegistrationAsync(CreateEnrollmentRequest request)
         {
-            var errors = _enrollmentValidatorService.ValidateCreateEnrollmentRequest(request);
-            if (errors.IsNullOrEmpty() == false)
-            {
-                var errorResponse = new CreateEnrollmentResponse
-                {
-                    Message = "During registration an error occurred!",
-                    IsOperationPassed = false,
-                    Errors = errors
-                };
-
-                return errorResponse;
-            }
+            await _enrollmentValidatorService.ValidateCreateEnrollmentRequestAsync(request);
 
             var enrollmentDto = new EnrollmentDto
             {
@@ -84,27 +73,20 @@ namespace SqlUniversity.Services
 
             _enrollments.GetOrAdd(saveEnrollment.Id, stateController);
 
-            _logger.LogInformation("enrollmentRequest started {EnrollmentRequest}", saveEnrollment.Id);
             var response = _mapper.Map<CreateEnrollmentResponse>(saveEnrollment);
-            response.Message = "Registration just started please enroll to courses.";
             response.IsOperationPassed = true;
+            response.Request = request;
+
             return response;
         }
 
 
-     
 
-        public AddCoursesEnrollmentResponse AddCourseToEnrollment(int enrollmentId, AddCoursesEnrollmentRequest request)
+
+        public async Task<AddCoursesEnrollmentResponse> AddCourseToEnrollmentAsync(int enrollmentId, AddCoursesEnrollmentRequest request)
         {
-            var errors = _enrollmentValidatorService.ValidationErrorsAddCourseToEnrollment(enrollmentId, request, out var enrollment);
-            if (!errors.IsNullOrEmpty())
-            {
-                var errorResponse = _mapper.Map<AddCoursesEnrollmentResponse>(enrollment ?? new Enrollment());
-                errorResponse.Message = $"During adding new courses an error occured!!!";
-                errorResponse.IsOperationPassed = false;
-                errorResponse.Errors = errors;
-                return errorResponse;
-            }
+            await _enrollmentValidatorService.ValidationErrorsAddCourseToEnrollmentAsync(enrollmentId, request);
+            var enrollment = _enrollmentRepository.Get(x => x.Id == enrollmentId);
 
             if (_enrollments.TryGetValue(enrollmentId, out var controller))
             {
@@ -114,26 +96,17 @@ namespace SqlUniversity.Services
                     state.AddCourses(request.CoursesIds);
                     var response = _mapper.Map<AddCoursesEnrollmentResponse>(state.EnrollmentDto);
                     response.IsOperationPassed = true;
+                    response.Request = request;
                     return response;
                 }
             }
 
-            throw new Exception($"{nameof(AddCourseToEnrollment)} - Failed!");
+            throw new Exception($"{nameof(AddCoursesEnrollmentRequest)} - Failed!");
         }
 
-        public RemoveCoursesEnrollmentResponse RemoveCourses(int enrollmentId, RemoveCoursesEnrollmentRequest request)
+        public async Task<RemoveCoursesEnrollmentResponse> RemoveCoursesAsync(int enrollmentId, RemoveCoursesEnrollmentRequest request)
         {
-            var errors = _enrollmentValidatorService.RemoveCoursesEnrollmentRequest(enrollmentId, request, out var enrollment);
-            if (!errors.IsNullOrEmpty())
-            {
-                var errorResponse = _mapper.Map<RemoveCoursesEnrollmentResponse>(enrollment ?? new Enrollment());
-                errorResponse.Message = $"During removing courses an error occured!!!";
-                errorResponse.IsOperationPassed = false;
-                errorResponse.Errors = errors;
-                return errorResponse;
-
-            }
-
+            await _enrollmentValidatorService.RemoveCoursesEnrollmentRequestAsync(enrollmentId, request);
 
             if (_enrollments.TryGetValue(enrollmentId, out var controller))
             {
@@ -147,22 +120,13 @@ namespace SqlUniversity.Services
                 }
             }
 
-            throw new Exception($"{nameof(RemoveCourses)} - Failed!");
+            throw new Exception($"{nameof(RemoveCoursesAsync)} - Failed!");
 
         }
 
-        public RemoveAllCoursesEnrollmentResponse RemoveAllCourses(int enrollmentId, RemoveAllCoursesEnrollmentRequest request)
+        public async Task<RemoveAllCoursesEnrollmentResponse> RemoveAllCoursesAsync(int enrollmentId, RemoveAllCoursesEnrollmentRequest request)
         {
-            var errors = _enrollmentValidatorService.RemoveAllCoursesEnrollmentRequest(enrollmentId, request, out var enrollment);
-            if (!errors.IsNullOrEmpty())
-            {
-                var errorResponse = _mapper.Map<RemoveAllCoursesEnrollmentResponse>(enrollment ?? new Enrollment());
-                errorResponse.Message = $"During removing all courses an error occured!!!";
-                errorResponse.IsOperationPassed = false;
-                errorResponse.Errors = errors;
-                return errorResponse;
-
-            }
+            await _enrollmentValidatorService.RemoveAllCoursesEnrollmentRequestAsync(enrollmentId, request);
 
             if (_enrollments.TryGetValue(enrollmentId, out var controller))
             {
@@ -172,25 +136,17 @@ namespace SqlUniversity.Services
                     state.RemoveCourses(coursesIds);
                     var response = _mapper.Map<RemoveAllCoursesEnrollmentResponse>(state.EnrollmentDto);
                     response.IsOperationPassed = true;
+                    response.Request = request;
                     return response;
                 }
             }
 
-            throw new Exception($"{nameof(RemoveAllCourses)} - Failed!");
+            throw new Exception($"{nameof(RemoveAllCoursesEnrollmentRequest)} - Failed!");
         }
 
-        public FinishRegistrationEnrollmentResponse FinishRegistration(int enrollmentId, FinishRegistrationEnrollmentRequest request)
+        public async Task<FinishRegistrationEnrollmentResponse> FinishRegistrationAsync(int enrollmentId, FinishRegistrationEnrollmentRequest request)
         {
-            var errors = _enrollmentValidatorService.FinishRegistrationEnrollmentRequest(enrollmentId, request, out var enrollment);
-            if (!errors.IsNullOrEmpty())
-            {
-                var errorResponse = _mapper.Map<FinishRegistrationEnrollmentResponse>(enrollment ?? new Enrollment());
-                errorResponse.Message = $"During Finishing registration an error occured!!!";
-                errorResponse.IsOperationPassed = false;
-                errorResponse.Errors = errors;
-                return errorResponse;
-            }
-
+            await _enrollmentValidatorService.FinishRegistrationEnrollmentRequestAsync(enrollmentId, request);
 
             if (_enrollments.TryGetValue(enrollmentId, out var controller))
             {
@@ -200,24 +156,17 @@ namespace SqlUniversity.Services
                     state.ChangedToCompletion();
                     var response = _mapper.Map<FinishRegistrationEnrollmentResponse>(state.EnrollmentDto);
                     response.IsOperationPassed = true;
+                    response.Request = request;
                     return response;
                 }
             }
 
-            throw new Exception($"{nameof(FinishRegistration)} - Failed!");
+            throw new Exception($"{nameof(FinishRegistrationAsync)} - Failed!");
         }
 
-        public PaidEnrollmentResponse PayedRegistration(int enrollmentId, PaidEnrollmentRequest request)
+        public async Task<PaidEnrollmentResponse> PayedRegistrationAsync(int enrollmentId, PaidEnrollmentRequest request)
         {
-            var errors = _enrollmentValidatorService.FinishRegistrationEnrollmentRequest(enrollmentId, request, out var enrollment);
-            if (!errors.IsNullOrEmpty())
-            {
-                var errorResponse = _mapper.Map<PaidEnrollmentResponse>(enrollment);
-                errorResponse.Message = $"During payment an error occured!!!";
-                errorResponse.IsOperationPassed = false;
-                errorResponse.Errors = errors;
-                return errorResponse;
-            }
+            await _enrollmentValidatorService.PaymentEnrollmentRequestAsync(enrollmentId, request);
 
             if (_enrollments.TryGetValue(enrollmentId, out var controller))
             {
@@ -226,24 +175,17 @@ namespace SqlUniversity.Services
                     state.ChangedToPaidState();
                     var response = _mapper.Map<PaidEnrollmentResponse>(state.EnrollmentDto);
                     response.IsOperationPassed = true;
+                    response.Request = request;
                     return response;
                 }
             }
 
-            throw new Exception($"{nameof(PayedRegistration)} - Failed!");
+            throw new Exception($"{nameof(PayedRegistrationAsync)} - Failed!");
         }
 
-        public CancelledEnrollmentResponse CancelledRegistration(int enrollmentId)
+        public async Task<CancelledEnrollmentResponse> CancelledRegistrationAsync(int enrollmentId)
         {
-            var errors = _enrollmentValidatorService.CancellationRegistrationEnrollmentRequest(enrollmentId, out var enrollment);
-            if (!errors.IsNullOrEmpty())
-            {
-                var errorResponse = _mapper.Map<CancelledEnrollmentResponse>(enrollment ?? new Enrollment());
-                errorResponse.Message = $"During cancellation an error occured!!!";
-                errorResponse.IsOperationPassed = false;
-                errorResponse.Errors = errors;
-                return errorResponse;
-            }
+            await _enrollmentValidatorService.CancellationRegistrationEnrollmentRequestAsync(enrollmentId);
 
             if (_enrollments.TryGetValue(enrollmentId, out var controller))
             {
@@ -256,7 +198,7 @@ namespace SqlUniversity.Services
                 }
             }
 
-            throw new Exception($"{nameof(CancelledRegistration)} - Failed!");
+            throw new Exception($"{nameof(CancelledRegistrationAsync)} - Failed!");
 
         }
 

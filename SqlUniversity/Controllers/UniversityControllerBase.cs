@@ -7,7 +7,7 @@ namespace SqlUniversity.Controllers
     public class UniversityControllerBase : ControllerBase
     {
         //EnrollmentReponse
-        protected async Task<TResponse> ErrorWrapper<TRequest, TResponse>(Func<Task<TResponse>> callback) where TResponse : NetBetReponseBase<TRequest>, new()
+        protected async Task<TResponse> ErrorWrapper<TRequest, TResponse>(Func<Task<TResponse>> callback) where TResponse : UniversityReponseBase<TRequest>, new()
                                                                                                           where TRequest : class
         {
             TResponse response = null;

@@ -5,7 +5,7 @@
         public int StuentId { get; set; }
     }
 
-    public class CreateEnrollmentResponse : EnrollmentReponse
+    public class CreateEnrollmentResponse : EnrollmentNetBetReponseBase<CreateEnrollmentRequest>
     {
 
     }

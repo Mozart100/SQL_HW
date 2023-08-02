@@ -5,7 +5,7 @@
 
     }
 
-    public class RemoveAllCoursesEnrollmentResponse : EnrollmentReponse
+    public class RemoveAllCoursesEnrollmentResponse : EnrollmentNetBetReponseBase<RemoveAllCoursesEnrollmentRequest>
     {
 
     }

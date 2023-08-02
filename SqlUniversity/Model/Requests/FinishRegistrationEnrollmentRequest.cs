@@ -6,7 +6,7 @@
     }
 
 
-    public class FinishRegistrationEnrollmentResponse : EnrollmentReponse
+    public class FinishRegistrationEnrollmentResponse : EnrollmentNetBetReponseBase<FinishRegistrationEnrollmentRequest>
     {
     }
     

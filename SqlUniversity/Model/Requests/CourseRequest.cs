@@ -13,7 +13,7 @@ namespace SqlUniversity.Model.Requests
 
     }
 
-    public class CourseResponse : NetBetReponseBase<CourseRequest>
+    public class CourseResponse : UniversityReponseBase<CourseRequest>
     {
         public int CourseID { get; set; }
     }

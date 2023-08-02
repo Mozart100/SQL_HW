@@ -9,7 +9,7 @@ namespace SqlUniversity.Model.Requests
     }
 
 
-    public class CourseRuleResponse : NetBetReponseBase<CourseRuleRequest>
+    public class CourseRuleResponse : UniversityReponseBase<CourseRuleRequest>
     {
     }
 }

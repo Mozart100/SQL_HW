@@ -5,7 +5,7 @@
         public int [] CoursesIds { get; set; }
     }
 
-    public class AddCoursesEnrollmentResponse : EnrollmentReponse
+    public class AddCoursesEnrollmentResponse : EnrollmentNetBetReponseBase<AddCoursesEnrollmentRequest>
     {
     }
 }

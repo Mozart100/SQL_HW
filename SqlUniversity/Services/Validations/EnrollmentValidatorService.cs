@@ -20,13 +20,13 @@ namespace SqlUniversity.Services.Validations
 
     public interface IEnrollmentValidatorService
     {
-        IEnumerable<UniversityError> ValidateCreateEnrollmentRequest(CreateEnrollmentRequest request);
-        IEnumerable<UniversityError> ValidationErrorsAddCourseToEnrollment(int enrollmentId, AddCoursesEnrollmentRequest request, out Enrollment enrollment);
-        IEnumerable<UniversityError> RemoveCoursesEnrollmentRequest(int enrollmentId, RemoveCoursesEnrollmentRequest request, out Enrollment enrollment);
-        IEnumerable<UniversityError> RemoveAllCoursesEnrollmentRequest(int enrollmentId, RemoveAllCoursesEnrollmentRequest request, out Enrollment enrollment);
-        IEnumerable<UniversityError> FinishRegistrationEnrollmentRequest(int enrollmentId, FinishRegistrationEnrollmentRequest request, out Enrollment enrollment);
-        IEnumerable<UniversityError> FinishRegistrationEnrollmentRequest(int enrollmentId, PaidEnrollmentRequest request, out Enrollment enrollment);
-        IEnumerable<UniversityError> CancellationRegistrationEnrollmentRequest(int enrollmentId, out Enrollment enrollment);
+        Task ValidateCreateEnrollmentRequestAsync(CreateEnrollmentRequest request);
+        Task ValidationErrorsAddCourseToEnrollmentAsync(int enrollmentId, AddCoursesEnrollmentRequest request);
+        Task RemoveCoursesEnrollmentRequestAsync(int enrollmentId, RemoveCoursesEnrollmentRequest request);
+        Task RemoveAllCoursesEnrollmentRequestAsync(int enrollmentId, RemoveAllCoursesEnrollmentRequest request);
+        Task FinishRegistrationEnrollmentRequestAsync(int enrollmentId, FinishRegistrationEnrollmentRequest request);
+        Task PaymentEnrollmentRequestAsync(int enrollmentId, PaidEnrollmentRequest request);
+        Task CancellationRegistrationEnrollmentRequestAsync(int enrollmentId);
     }
 
     public class EnrollmentValidatorService : ServiceValidatorBase, IEnrollmentValidatorService
@@ -49,16 +49,13 @@ namespace SqlUniversity.Services.Validations
 
         }
 
-        public IEnumerable<UniversityError> ValidateCreateEnrollmentRequest(CreateEnrollmentRequest request)
+        public async Task ValidateCreateEnrollmentRequestAsync(CreateEnrollmentRequest request)
         {
             var validator = new CreateEnrollmentRequestValidator();
             var validationResult = validator.Validate(request);
 
             var errors = Dissect(validationResult);
-            if (errors.Any())
-            {
-                return errors;
-            }
+            Validate(errors);
 
 
             var enrollments = _enrollmentRepository.GetAll();
@@ -73,28 +70,24 @@ namespace SqlUniversity.Services.Validations
                 }
             }
 
-            return errors;
+            Validate(errors);
         }
 
-        public IEnumerable<UniversityError> ValidationErrorsAddCourseToEnrollment(int enrollmentId,
-           AddCoursesEnrollmentRequest request,
-           out Enrollment enrollment)
+        public async Task ValidationErrorsAddCourseToEnrollmentAsync(int enrollmentId, AddCoursesEnrollmentRequest request)
         {
-            var validationEnrollmentErrors = ValidateEnrollment(enrollmentId, out enrollment);
-            if (validationEnrollmentErrors.Any())
-            {
-                return validationEnrollmentErrors;
-            }
-
             var validator = new AddCoursesEnrollmentRequestValidator();
             var validationResult = validator.Validate(request);
-            var validationResultErrors = Dissect(validationResult);
-            if (validationResultErrors.Any())
-            {
-                return validationResultErrors;
-            }
+            var errors = Dissect(validationResult);
+            Validate(errors);
 
-            var errors = new List<UniversityError>();
+
+            var enrollment = _enrollmentRepository.Get(x => x.Id == enrollmentId);
+            if (enrollment == null)
+            {
+                errors.Add(new UniversityError(errorMessage: $"No souch enrollment {enrollmentId}", propertyName: nameof(enrollmentId)));
+            }
+            Validate(errors);
+
             foreach (var courseId in request.CoursesIds)
             {
                 if (!_courseIds.Contains(courseId))
@@ -102,6 +95,8 @@ namespace SqlUniversity.Services.Validations
                     errors.Add(new UniversityError(errorMessage: $"This {courseId} doesnt exist", propertyName: nameof(courseId)));
                 }
             }
+            Validate(errors);
+
 
             //Courses can be added from any states except from payed and cancelled.
             if (enrollment.TypeState == EnrollmentTypeState.Payed || enrollment.TypeState == EnrollmentTypeState.Cancelled)
@@ -109,35 +104,28 @@ namespace SqlUniversity.Services.Validations
                 errors.Add(new UniversityError(errorMessage: $"In {enrollment.TypeState} it is invalid to add course.", propertyName: "State"));
             }
 
-            if (errors.Any())
-            {
-                return errors;
-            }
-
-            return errors;
+            Validate(errors);
         }
 
-
-
-        public IEnumerable<UniversityError> RemoveCoursesEnrollmentRequest(int enrollmentId,
-           RemoveCoursesEnrollmentRequest request,
-          out Enrollment enrollment)
+        public async Task RemoveCoursesEnrollmentRequestAsync(int enrollmentId,
+           RemoveCoursesEnrollmentRequest request)
         {
-            var validationEnrollmentErrors = ValidateEnrollment(enrollmentId, out enrollment);
-            if (validationEnrollmentErrors.Any())
-            {
-                return validationEnrollmentErrors;
-            }
-
             var validator = new RemoveCoursesEnrollmentRequestValidator();
             var validationResult = validator.Validate(request);
-            var validationResultErrors = Dissect(validationResult);
-            if (validationResultErrors.Any())
-            {
-                return validationResultErrors;
-            }
+            var errors = Dissect(validationResult);
+            Validate(errors);
 
-            var errors = new List<UniversityError>();
+
+
+            var enrollment = _enrollmentRepository.Get(x => x.Id == enrollmentId);
+            if (enrollment == null)
+            {
+                errors.Add(new UniversityError(errorMessage: $"No souch enrollment {enrollmentId}", propertyName: nameof(enrollmentId)));
+            }
+            Validate(errors);
+
+
+
             foreach (var courseId in request.CoursesIds)
             {
                 if (!_courseIds.Contains(courseId))
@@ -145,125 +133,120 @@ namespace SqlUniversity.Services.Validations
                     errors.Add(new UniversityError(errorMessage: $"This {courseId} doesnt exist", propertyName: nameof(courseId)));
                 }
             }
+            Validate(errors);
+
 
             //Courses can be removed from any states except from payed and cancelled.
             if (enrollment.TypeState == EnrollmentTypeState.Payed || enrollment.TypeState == EnrollmentTypeState.Cancelled)
             {
                 errors.Add(new UniversityError(errorMessage: $"In {enrollment.TypeState} it is invalid to remove course.", propertyName: "State"));
             }
+            Validate(errors);
 
-            if (errors.Any())
-            {
-                return errors;
-            }
 
 
             var isEnrollmentInactive = EnrollmentService.IsEnrollmentInactive(enrollment.TypeState);
             if (isEnrollmentInactive)
             {
                 errors.Add(new UniversityError("This enrollment is no longer active", "EnrollmentState"));
-                return errors;
             }
+            Validate(errors);
 
-            return errors;
         }
 
 
-        public IEnumerable<UniversityError> RemoveAllCoursesEnrollmentRequest(int enrollmentId,
-                RemoveAllCoursesEnrollmentRequest request,
-                out Enrollment enrollment)
+        public async Task RemoveAllCoursesEnrollmentRequestAsync(int enrollmentId,
+                RemoveAllCoursesEnrollmentRequest request)
         {
-            var validationEnrollmentErrors = ValidateEnrollment(enrollmentId, out enrollment);
-            if (validationEnrollmentErrors.Any())
-            {
-                return validationEnrollmentErrors;
-            }
-            
             var errors = new List<UniversityError>();
+            var enrollment = _enrollmentRepository.Get(x => x.Id == enrollmentId);
+            if (enrollment == null)
+            {
+                errors.Add(new UniversityError(errorMessage: $"No souch enrollment {enrollmentId}", propertyName: nameof(enrollmentId)));
+            }
+            Validate(errors);
+
 
 
             if (enrollment.TypeState == EnrollmentTypeState.Payed || enrollment.TypeState == EnrollmentTypeState.Cancelled)
             {
                 errors.Add(new UniversityError(errorMessage: $"In {enrollment.TypeState} it is invalid to remove all course.", propertyName: "State"));
-                return errors;
             }
+            Validate(errors);
+
 
             var isEnrollmentInactive = EnrollmentService.IsEnrollmentInactive(enrollment.TypeState);
             if (isEnrollmentInactive)
             {
                 errors.Add(new UniversityError("This enrollment is no longer active", "EnrollmentState"));
-                return errors;
             }
+            Validate(errors);
 
-            return errors;
         }
 
-        public IEnumerable<UniversityError> FinishRegistrationEnrollmentRequest(int enrollmentId,
-            FinishRegistrationEnrollmentRequest request,
-            out Enrollment enrollment)
+        public async Task FinishRegistrationEnrollmentRequestAsync(int enrollmentId,
+            FinishRegistrationEnrollmentRequest request)
         {
-            var validationErrors = ValidateEnrollment(enrollmentId, out enrollment);
-
-            if (validationErrors.Any())
+            var errors = new List<UniversityError>();
+            var enrollment = _enrollmentRepository.Get(x => x.Id == enrollmentId);
+            if (enrollment == null)
             {
-                return validationErrors;
+                errors.Add(new UniversityError(errorMessage: $"No souch enrollment {enrollmentId}", propertyName: nameof(enrollmentId)));
             }
+            Validate(errors);
 
             //Its stating in order to finish registration at least one course should be selected.
-            var errors = new List<UniversityError>();
             if (enrollment.Courses.IsNullOrEmpty())
             {
                 errors.Add(new UniversityError("No courses was selected", "Courses"));
             }
+            Validate(errors);
+
 
             if (enrollment.TypeState != EnrollmentTypeState.InProgress)
             {
                 errors.Add(new UniversityError(errorMessage: $"Only form In InProgress state an enrollment can be finishedh.", propertyName: "State"));
-                return errors;
             }
-
-            return errors;
+            Validate(errors);
         }
 
-        public IEnumerable<UniversityError> FinishRegistrationEnrollmentRequest(int enrollmentId,
-            PaidEnrollmentRequest request,
-            out Enrollment enrollment)
+        public async Task PaymentEnrollmentRequestAsync(int enrollmentId,
+            PaidEnrollmentRequest request)
         {
-            var validationErrors = ValidateEnrollment(enrollmentId, out enrollment);
-
-            if (validationErrors.Any())
+            var errors = new List<UniversityError>();
+            var enrollment = _enrollmentRepository.Get(x => x.Id == enrollmentId);
+            if (enrollment == null)
             {
-                return validationErrors;
+                errors.Add(new UniversityError(errorMessage: $"No souch enrollment {enrollmentId}", propertyName: nameof(enrollmentId)));
             }
+            Validate(errors);
 
             //Payment can be only in state completed.
-            var errors = new List<UniversityError>();
             if (enrollment.TypeState != EnrollmentTypeState.Completed)
             {
                 errors.Add(new UniversityError("Payment can be only in state completed", "State"));
             }
 
-            return errors;
+            Validate(errors);
         }
 
-        public IEnumerable<UniversityError> CancellationRegistrationEnrollmentRequest(int enrollmentId,
-            out Enrollment enrollment)
+        public async Task CancellationRegistrationEnrollmentRequestAsync(int enrollmentId)
         {
-            var validationErrors = ValidateEnrollment(enrollmentId, out enrollment);
-
-            if (validationErrors.Any())
+            var errors = new List<UniversityError>();
+            var enrollment = _enrollmentRepository.Get(x => x.Id == enrollmentId);
+            if (enrollment == null)
             {
-                return validationErrors;
+                errors.Add(new UniversityError(errorMessage: $"No souch enrollment {enrollmentId}", propertyName: nameof(enrollmentId)));
             }
+            Validate(errors);
 
             //Cancellation can be only from Completed or InProgress
-            var errors = new List<UniversityError>();
             if (enrollment.TypeState != EnrollmentTypeState.Completed && enrollment.TypeState != EnrollmentTypeState.InProgress)
             {
                 errors.Add(new UniversityError("Cancellation can be only from completed or from InProgress", "State"));
             }
+            Validate(errors);
 
-            return errors;
         }
 
         private IEnumerable<UniversityError> ValidateEnrollment(int enrollmentId, out Enrollment enrollment)

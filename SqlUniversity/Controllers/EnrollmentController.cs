@@ -9,7 +9,7 @@ namespace SqlUniversity.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EnrollmentController : ControllerBase
+    public class EnrollmentController : UniversityControllerBase
     {
         public const string RegistrationRoute = "registration";
         public const string RemoveCoursesRoute = "removecourses";
@@ -29,15 +29,13 @@ namespace SqlUniversity.Controllers
         [Route(RegistrationRoute)]
         public async Task<CreateEnrollmentResponse> Registration([FromBody] CreateEnrollmentRequest request)
         {
-            var response = _enrollmentService.CreateRegistration(request);
-            return response;
+            return await ErrorWrapper<CreateEnrollmentRequest, CreateEnrollmentResponse>(async () => await _enrollmentService.CreateRegistrationAsync(request));
         }
 
         [HttpPut("{enrollmentId}")]
         public async Task<AddCoursesEnrollmentResponse> Put(int enrollmentId, [FromBody] AddCoursesEnrollmentRequest request)
         {
-            var dto = _enrollmentService.AddCourseToEnrollment(enrollmentId, request);
-            return dto;
+            return await ErrorWrapper<AddCoursesEnrollmentRequest, AddCoursesEnrollmentResponse>(async () => await _enrollmentService.AddCourseToEnrollmentAsync(enrollmentId, request));
         }
 
 
@@ -45,8 +43,7 @@ namespace SqlUniversity.Controllers
         [Route($"{RemoveCoursesRoute}/{{enrollmentId}}")]
         public async Task<RemoveCoursesEnrollmentResponse> RemoveCourses(int enrollmentId, [FromBody] RemoveCoursesEnrollmentRequest request)
         {
-            var dto = _enrollmentService.RemoveCourses(enrollmentId, request);
-            return dto;
+            return await ErrorWrapper<RemoveCoursesEnrollmentRequest, RemoveCoursesEnrollmentResponse>(async () => await _enrollmentService.RemoveCoursesAsync(enrollmentId, request));
         }
 
 
@@ -54,16 +51,14 @@ namespace SqlUniversity.Controllers
         [Route("removeallcourses/{enrollmentId}")]
         public async Task<RemoveAllCoursesEnrollmentResponse> RemoveAllCourses(int enrollmentId, [FromBody] RemoveAllCoursesEnrollmentRequest request)
         {
-            var dto = _enrollmentService.RemoveAllCourses(enrollmentId, request);
-            return dto;
+            return await ErrorWrapper<RemoveAllCoursesEnrollmentRequest, RemoveAllCoursesEnrollmentResponse>(async () => await _enrollmentService.RemoveAllCoursesAsync(enrollmentId, request));
         }
 
         [HttpPut()]
         [Route($"{FinishRegistrationRoute}/{{enrollmentId}}")]
         public async Task<FinishRegistrationEnrollmentResponse> FinishRegistration(int enrollmentId, [FromBody] FinishRegistrationEnrollmentRequest request)
         {
-            FinishRegistrationEnrollmentResponse dto = _enrollmentService.FinishRegistration(enrollmentId, request);
-            return dto;
+            return await ErrorWrapper<FinishRegistrationEnrollmentRequest, FinishRegistrationEnrollmentResponse>(async () =>  await _enrollmentService.FinishRegistrationAsync(enrollmentId, request));
         }
 
 
@@ -71,16 +66,14 @@ namespace SqlUniversity.Controllers
         [Route($"{PaidRoute}/{{enrollmentId}}")]
         public async Task<PaidEnrollmentResponse> Paid(int enrollmentId, [FromBody] PaidEnrollmentRequest request)
         {
-            var dto = _enrollmentService.PayedRegistration(enrollmentId, request);
-            return dto;
+            return await ErrorWrapper<PaidEnrollmentRequest, PaidEnrollmentResponse>(async () => await _enrollmentService.PayedRegistrationAsync(enrollmentId, request));
         }
 
         [HttpDelete()]
         [Route($"{CancelRoute}/{{enrollmentId}}")]
         public async Task<CancelledEnrollmentResponse> Cancelled(int enrollmentId)
         {
-            CancelledEnrollmentResponse dto = _enrollmentService.CancelledRegistration(enrollmentId);
-            return dto;
+            return await ErrorWrapper<CancelledEnrollmentRequest, CancelledEnrollmentResponse>(async () => await _enrollmentService.CancelledRegistrationAsync(enrollmentId));
         }
 
         // GET: api/<EnrollmentController>

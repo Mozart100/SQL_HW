@@ -1,6 +1,13 @@
-﻿namespace SqlUniversity.Model.Requests
+﻿
+namespace SqlUniversity.Model.Requests
 {
-    public class CancelledEnrollmentResponse : EnrollmentReponse
+
+    public class CancelledEnrollmentRequest 
+    {
+
+
+    }
+    public class CancelledEnrollmentResponse : EnrollmentNetBetReponseBase<CancelledEnrollmentRequest>
     {
     }
 }
