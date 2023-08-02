@@ -8,7 +8,7 @@ namespace SqlUniversity.Services
 {
     public interface ICourseService
     {
-        CourseDto AddCourse(CourseRequest request);
+        CourseResponse AddCourse(CourseRequest request);
         CourseRuleResponse AddCourseRule(CourseRuleRequest request);
         IEnumerable<CourseDto> GetAllCourse();
         IEnumerable<CourseRuleDto> GetAllCourseRules();
@@ -36,7 +36,7 @@ namespace SqlUniversity.Services
             this._courseRulesRepository = courseRulesRepository;
         }
 
-        public CourseDto AddCourse(CourseRequest request)
+        public CourseResponse AddCourse(CourseRequest request)
         {
             var course = _mapper.Map<Course>(request);
 
@@ -49,7 +49,10 @@ namespace SqlUniversity.Services
 
 
             _logger.LogInformation("Course Added {course}", course.Id);
-            return _mapper.Map<CourseDto>(savedCoure);
+            var response =  _mapper.Map<CourseResponse>(savedCoure);
+            response.IsOperationPassed = true;
+            response.Request = request;
+            return response;
         }
 
         public CourseRuleResponse AddCourseRule(CourseRuleRequest request)

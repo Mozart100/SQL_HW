@@ -9,7 +9,7 @@ namespace SqlUniversity.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CoursesController : ControllerBase
+    public class CoursesController : UniversityControllerBase
     {
         private readonly ICourseService _courseService;
 
@@ -26,10 +26,9 @@ namespace SqlUniversity.Controllers
 
         // POST api/<CoursesController>
         [HttpPost]
-        public async Task<ActionResult<int>> Post([FromBody] CourseRequest value)
+        public async Task<CourseResponse> Post([FromBody] CourseRequest value)
         {
-            var courseId = _courseService.AddCourse(value);
-            return Ok(courseId);
+            return await ErrorWrapper<CourseRequest, CourseResponse>(async () => _courseService.AddCourse(value));
         }
     }
 }

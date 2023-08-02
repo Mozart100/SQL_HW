@@ -29,8 +29,6 @@ namespace SqlUniversity.Controllers
         public async Task<CourseRuleResponse> Post([FromBody] CourseRuleRequest request)
         {
             return await ErrorWrapper<CourseRuleRequest, CourseRuleResponse>(async () => _courseService.AddCourseRule(request));
-            //var res = _courseService.AddCourseRule(request);
-            //return res;
         }
     }
 }
