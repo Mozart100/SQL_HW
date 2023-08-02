@@ -2,6 +2,17 @@
 
 namespace SqlUniversity.Services.Validations
 {
+    public class UninversityException : Exception
+    {
+        public UninversityException(params UniversityError[] error)
+        {
+            Errors = error;
+        }
+
+        public UniversityError[] Errors { get; }
+    }
+
+
     public abstract class ServiceValidatorBase
     {
         protected virtual IList<UniversityError> Dissect(ValidationResult validationResult)

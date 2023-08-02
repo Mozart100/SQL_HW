@@ -7,4 +7,9 @@ namespace SqlUniversity.Model.Requests
         public int Year { get; set; }
         public int RequiredPoints { get; set; }
     }
+
+
+    public class CourseRuleResponse : NetBetReponseBase<CourseRuleRequest>
+    {
+    }
 }

@@ -60,7 +60,7 @@ namespace SqlUniversity.Automation.Scenario
         {
             foreach (var courseRule in _courseRules)
             {
-                await RunPostCommand<CourseRuleRequest, CourseRuleDto>(CourseRuleUrl, courseRule);
+                var response = await RunPostCommand<CourseRuleRequest, CourseRuleResponse>(CourseRuleUrl, courseRule);
             }
 
             var courses = await Get<IEnumerable<CourseRuleDto>>(CourseRuleUrl);

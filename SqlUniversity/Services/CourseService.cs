@@ -9,7 +9,7 @@ namespace SqlUniversity.Services
     public interface ICourseService
     {
         CourseDto AddCourse(CourseRequest request);
-        CourseRuleDto AddCourseRule(CourseRuleRequest request);
+        CourseRuleResponse AddCourseRule(CourseRuleRequest request);
         IEnumerable<CourseDto> GetAllCourse();
         IEnumerable<CourseRuleDto> GetAllCourseRules();
         CourseDto GetCourseById(int courseId);
@@ -43,7 +43,7 @@ namespace SqlUniversity.Services
             var savedCoure = _coursetRepository.Insert(course);
             foreach (var yearSuited in request.YearsSuited)
             {
-                var courseYearly = new AssignCourseYearly { CourseId = savedCoure.Id,  Year = yearSuited };
+                var courseYearly = new AssignCourseYearly { CourseId = savedCoure.Id, Year = yearSuited };
                 _assignCourseYearyRepository.Insert(courseYearly);
             }
 
@@ -52,11 +52,14 @@ namespace SqlUniversity.Services
             return _mapper.Map<CourseDto>(savedCoure);
         }
 
-        public CourseRuleDto AddCourseRule(CourseRuleRequest request)
+        public CourseRuleResponse AddCourseRule(CourseRuleRequest request)
         {
             var course = _mapper.Map<CourseRule>(request);
             var savedCourse = _courseRulesRepository.Insert(course);
-            return _mapper.Map<CourseRuleDto>(savedCourse);
+            var response = _mapper.Map<CourseRuleResponse>(savedCourse);
+            response.IsOperationPassed = true;
+            response.Request = request;
+            return response;
         }
 
         public IEnumerable<CourseDto> GetAllCourse()
@@ -86,7 +89,7 @@ namespace SqlUniversity.Services
         public CourseDto GetCourseById(int courseId)
         {
             var course = _coursetRepository.Get(x => x.Id == courseId);
-            if(course != null)
+            if (course != null)
             {
                 return _mapper.Map<CourseDto>(course);
             }

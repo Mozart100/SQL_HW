@@ -34,8 +34,11 @@ namespace SqlUniversity.Startup
             CreateMap<EnrollmentDto, PaidEnrollmentResponse>();
             CreateMap<EnrollmentDto, CancelledEnrollmentResponse>();
             
+            
+            CreateMap<CourseRule, CourseRuleResponse>();
 
 
+            
 
 
             CreateMap<CreateEnrollmentResponse, CreateEnrollmentResponse>();
