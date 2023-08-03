@@ -26,9 +26,10 @@ namespace SqlUniversity.Controllers
 
         // POST api/<CoursesController>
         [HttpPost]
-        public async Task<CourseResponse> Post([FromBody] CourseRequest value)
+        public async Task<CourseResponse> Post([FromBody] CourseRequest request)
         {
-            return await ErrorWrapper<CourseRequest, CourseResponse>(async () => _courseService.AddCourse(value));
+            //return await ErrorWrapper(async () => _courseService.AddCourse(request), () => request);
+            return await ErrorWrapper(request , async (x) => _courseService.AddCourse(x));
         }
     }
 }

@@ -29,21 +29,21 @@ namespace SqlUniversity.Controllers
         [Route(RegistrationRoute)]
         public async Task<CreateEnrollmentResponse> Registration([FromBody] CreateEnrollmentRequest request)
         {
-            return await ErrorWrapper<CreateEnrollmentRequest, CreateEnrollmentResponse>(async () => await _enrollmentService.CreateRegistrationAsync(request));
+            return await ErrorWrapper<CreateEnrollmentRequest, CreateEnrollmentResponse>(request,async (req) => await _enrollmentService.CreateRegistrationAsync(req));
         }
 
         [HttpPut("{enrollmentId}")]
         public async Task<AddCoursesEnrollmentResponse> Put(int enrollmentId, [FromBody] AddCoursesEnrollmentRequest request)
         {
-            return await ErrorWrapper<AddCoursesEnrollmentRequest, AddCoursesEnrollmentResponse>(async () => await _enrollmentService.AddCourseToEnrollmentAsync(enrollmentId, request));
+            return await ErrorWrapper(request,async (req) => await _enrollmentService.AddCourseToEnrollmentAsync(enrollmentId, req));
         }
 
 
         [HttpPut()]
         [Route($"{RemoveCoursesRoute}/{{enrollmentId}}")]
-        public async Task<RemoveCoursesEnrollmentResponse> RemoveCourses(int enrollmentId, [FromBody] RemoveCoursesEnrollmentRequest request)
+        public async Task<RemoveCoursesEnrollmentResponse> RemoveCourses(int enrollmentId, [FromBody] RemoveCoursesEnrollmentRequest req)
         {
-            return await ErrorWrapper<RemoveCoursesEnrollmentRequest, RemoveCoursesEnrollmentResponse>(async () => await _enrollmentService.RemoveCoursesAsync(enrollmentId, request));
+            return await ErrorWrapper(req,async (req) => await _enrollmentService.RemoveCoursesAsync(enrollmentId, req));
         }
 
 
@@ -51,14 +51,14 @@ namespace SqlUniversity.Controllers
         [Route("removeallcourses/{enrollmentId}")]
         public async Task<RemoveAllCoursesEnrollmentResponse> RemoveAllCourses(int enrollmentId, [FromBody] RemoveAllCoursesEnrollmentRequest request)
         {
-            return await ErrorWrapper<RemoveAllCoursesEnrollmentRequest, RemoveAllCoursesEnrollmentResponse>(async () => await _enrollmentService.RemoveAllCoursesAsync(enrollmentId, request));
+            return await ErrorWrapper(request,async (req) => await _enrollmentService.RemoveAllCoursesAsync(enrollmentId, request));
         }
 
         [HttpPut()]
         [Route($"{FinishRegistrationRoute}/{{enrollmentId}}")]
         public async Task<FinishRegistrationEnrollmentResponse> FinishRegistration(int enrollmentId, [FromBody] FinishRegistrationEnrollmentRequest request)
         {
-            return await ErrorWrapper<FinishRegistrationEnrollmentRequest, FinishRegistrationEnrollmentResponse>(async () =>  await _enrollmentService.FinishRegistrationAsync(enrollmentId, request));
+            return await ErrorWrapper(request,async (req) =>  await _enrollmentService.FinishRegistrationAsync(enrollmentId, req));
         }
 
 
@@ -66,14 +66,14 @@ namespace SqlUniversity.Controllers
         [Route($"{PaidRoute}/{{enrollmentId}}")]
         public async Task<PaidEnrollmentResponse> Paid(int enrollmentId, [FromBody] PaidEnrollmentRequest request)
         {
-            return await ErrorWrapper<PaidEnrollmentRequest, PaidEnrollmentResponse>(async () => await _enrollmentService.PayedRegistrationAsync(enrollmentId, request));
+            return await ErrorWrapper(request,async (req) => await _enrollmentService.PayedRegistrationAsync(enrollmentId, req));
         }
 
         [HttpDelete()]
         [Route($"{CancelRoute}/{{enrollmentId}}")]
         public async Task<CancelledEnrollmentResponse> Cancelled(int enrollmentId)
         {
-            return await ErrorWrapper<CancelledEnrollmentRequest, CancelledEnrollmentResponse>(async () => await _enrollmentService.CancelledRegistrationAsync(enrollmentId));
+            return await ErrorWrapper<CancelledEnrollmentRequest, CancelledEnrollmentResponse>(null,async (req) => await _enrollmentService.CancelledRegistrationAsync(enrollmentId));
         }
 
         // GET: api/<EnrollmentController>
