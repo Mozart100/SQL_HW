@@ -2,7 +2,7 @@
 
 namespace SqlUniversity.Model.Dtos
 {
-    public class CourseRuleDto : ICourseRuleDtoMapper
+    public class CourseRuleDto
     {
         public int Id { get; set; }
         public int Year { get; set; }

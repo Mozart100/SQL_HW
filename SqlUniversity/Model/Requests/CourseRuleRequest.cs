@@ -2,7 +2,7 @@
 
 namespace SqlUniversity.Model.Requests
 {
-    public class CourseRuleRequest : ICourseRuleMapper
+    public class CourseRuleRequest
     {
         public int Year { get; set; }
         public int RequiredPoints { get; set; }
